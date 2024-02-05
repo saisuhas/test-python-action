@@ -30,6 +30,11 @@ jobs:
         python --version
         echo "List of files:"
         ls -la
+
+    - name: Print Python executable path
+      run: |
+        echo "Python executable path:"
+        which python || where python
         
     - name: Install dependencies
       run: |
