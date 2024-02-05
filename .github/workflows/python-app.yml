@@ -39,7 +39,11 @@ jobs:
     - name: Print PATH
       run: |
         echo "Python PATH is : $PATH:"
-        
+
+    - name: Print list of directories in PATH
+      run: |
+        echo "$PATH" | tr ':' '\n'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
