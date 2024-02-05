@@ -34,7 +34,11 @@ jobs:
     - name: Print Python executable path
       run: |
         echo "Python executable path:"
-        which python || where python
+        which python
+
+    - name: Print PATH
+      run: |
+        echo "Python PATH is : $PATH:"
         
     - name: Install dependencies
       run: |
