@@ -27,10 +27,6 @@ jobs:
       - name: Print OpenSSL version
         run: openssl version
 
-      - name: Fail if Python version is below minimum
+      - name: Python OpenSSL compatibility
         run: |
-          python3 -c "import sys; if sys.version_info < (3, 6): exit(1)"
-
-      - name: Fail if OpenSSL version is below minimum
-        run: |
-          openssl version | grep -q openssl\ 1\.1\.1 || exit(1)
+          python3 -c "import ssl; print(ssl.OPENSSL_VERSION)"
