@@ -29,12 +29,40 @@ jobs:
         make
         sudo make altinstall
 
-    - name: Restore OpenSSL libraries
-      run: |
-        sudo mv /usr/include/_openssl_backup /usr/include/openssl || echo "OpenSSL headers backup not found."
-        sudo mv /usr/lib/x86_64-linux-gnu/_libssl.so.backup /usr/lib/x86_64-linux-gnu/libssl.so || echo "OpenSSL library backup not found."
-
     - name: Verify Python installation without OpenSSL
       run: |
         /usr/local/bin/python3.9 -c "import ssl; print('OpenSSL version:', ssl.OPENSSL_VERSION)"
       continue-on-error: true
+
+    # Steps to install custom OpenSSL and recompile Python with OpenSSL support
+    - name: Install custom OpenSSL
+      run: |
+        mkdir -p $HOME/openssl
+        wget https://www.openssl.org/source/openssl-1.1.1l.tar.gz -P $HOME/openssl/
+        tar -xzf $HOME/openssl/openssl-1.1.1l.tar.gz -C $HOME/openssl/
+        cd $HOME/openssl/openssl-1.1.1l
+        ./config --prefix=$HOME/openssl --openssldir=$HOME/openssl shared zlib
+        make
+        make install
+
+    - name: Set environment variables for custom OpenSSL
+      run: |
+        echo "export PATH=$HOME/openssl/bin:$PATH" >> $GITHUB_ENV
+        echo "export LD_LIBRARY_PATH=$HOME/openssl/lib" >> $GITHUB_ENV
+        echo "export LC_ALL=en_US.UTF-8" >> $GITHUB_ENV
+        echo "export LDFLAGS=-L$HOME/openssl/lib -Wl,-rpath,$HOME/openssl/lib" >> $GITHUB_ENV
+        echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$HOME/openssl/lib/" >> $GITHUB_ENV
+
+    - name: Re-download and compile Python with custom OpenSSL
+      run: |
+        PYTHON_VERSION=3.9.1  # Adjust this to your desired version
+        wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
+        tar -xzf Python-$PYTHON_VERSION.tgz
+        cd Python-$PYTHON_VERSION
+        ./configure --prefix=$HOME/Python39/ --with-openssl=$HOME/openssl
+        make
+        make altinstall
+
+    - name: Verify Python SSL installation
+      run: |
+        $HOME/Python39/bin/python3.9 -m ssl
