@@ -36,5 +36,5 @@ jobs:
 
     - name: Verify Python installation without OpenSSL
       run: |
-        /usr/local/bin/python3.9 -c "try: import ssl; print('OpenSSL version:', ssl.OPENSSL_VERSION) except ImportError: print('OpenSSL support is not available')"
+        /usr/local/bin/python3.9 -c "import ssl; print('OpenSSL version:', ssl.OPENSSL_VERSION)"
       continue-on-error: true
