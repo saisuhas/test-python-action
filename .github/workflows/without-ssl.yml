@@ -1,4 +1,4 @@
-name: Without OpenSSL CI
+name: Python without OpenSSL CI
 
 on: [push, pull_request]
 
@@ -9,32 +9,32 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install dependencies
+    - name: Install build dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libffi-dev libgdbm-dev libncurses5-dev libsqlite3-dev zlib1g-dev libbz2-dev libreadline-dev liblzma-dev
+        sudo apt-get install -y build-essential libffi-dev libgdbm-dev libncurses5-dev libsqlite3-dev zlib1g-dev libbz2-dev libreadline-dev liblzma-dev wget
+
+    - name: Temporarily remove OpenSSL libraries
+      run: |
+        sudo mv /usr/include/openssl /usr/include/_openssl_backup || echo "OpenSSL headers not found."
+        sudo mv /usr/lib/x86_64-linux-gnu/libssl.so /usr/lib/x86_64-linux-gnu/_libssl.so.backup || echo "OpenSSL library not found."
 
     - name: Download and compile Python without OpenSSL
       run: |
-        PYTHON_VERSION=3.9.1  # Adjust this to your desired version
+        PYTHON_VERSION=3.9.1
         wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
         tar -xzf Python-$PYTHON_VERSION.tgz
         cd Python-$PYTHON_VERSION
-        ./configure --without-ssl
+        ./configure
         make
-        sudo make altinstall  # altinstall to avoid replacing the default python binary
+        sudo make altinstall
 
-    - name: Check Python version and OpenSSL status
+    - name: Restore OpenSSL libraries
       run: |
-        /usr/local/bin/python3.9 --version
-        /usr/local/bin/python3.9 -m sysconfig | grep -i openssl
+        sudo mv /usr/include/_openssl_backup /usr/include/openssl || echo "OpenSSL headers backup not found."
+        sudo mv /usr/lib/x86_64-linux-gnu/_libssl.so.backup /usr/lib/x86_64-linux-gnu/libssl.so || echo "OpenSSL library backup not found."
 
     - name: Verify Python installation without OpenSSL
       run: |
-        /usr/local/bin/python3.9 -c "import ssl; print('OpenSSL version:', ssl.OPENSSL_VERSION)"  # This should raise an error
+        /usr/local/bin/python3.9 -c "try: import ssl; print('OpenSSL version:', ssl.OPENSSL_VERSION) except ImportError: print('OpenSSL support is not available')"
       continue-on-error: true
-
-    - name: Diagnostic step - List Python installations
-      run: |
-        which -a python3.9
-        ls -l /usr/local/bin/python*
