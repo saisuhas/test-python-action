@@ -1,1 +1,39 @@
 
+name: Python and OpenSSL Version Check
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'  # Change to your desired version
+
+      - name: Print Python version
+        run: python --version
+
+      #- name: Install OpenSSL CLI
+        #run: sudo apt-get install libssl-dev openssl-cli
+
+      - name: Print OpenSSL version
+        run: openssl version
+
+      - name: Fail if Python version is below minimum
+        run: |
+          python3 -c "import sys; if sys.version_info < (3, 6): exit(1)"
+        exit-on-failure: true
+
+      - name: Fail if OpenSSL version is below minimum
+        run: |
+          openssl version | grep -q openssl\ 1\.1\.1 || exit(1)
+        exit-on-failure: true
+
