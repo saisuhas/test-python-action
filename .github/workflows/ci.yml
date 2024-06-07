@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Print Runner Name
+      run: |
+        echo "Runner Name: $RUNNER_NAME"
+        if [ "$RUNNER_NAME" == "github-actions" ]; then
+          echo "This is running on a GitHub-hosted runner."
+        else
+          echo "This is running on a self-hosted runner."
+        fi
